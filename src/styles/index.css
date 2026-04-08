@@ -1,0 +1,143 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+@import '@figma/astraui/styles.css';
+
+/* =====================================================
+   CELLTRION PHARMA — Brand token overrides
+   (applied after astraui so these win the cascade)
+   ===================================================== */
+
+/* ── Light mode ────────────────────────────────────── */
+:root {
+  /* Brand — CELLTRION Green */
+  --brand-primary:   #00B050;
+  --brand-hover:     #009645;
+  --brand-dark:      #007835;
+  --brand-secondary: #c8edda;
+  --brand-tertiary:  #eaf7ef;
+  --brand-muted:     #6bbf92;
+
+  /* Status */
+  --success: #00B050;
+  --warning: #F5A623;
+  --danger:  #D0021B;
+
+  /* Surfaces — clean clinical whites */
+  --surface-bg:           #ffffff;
+  --surface-secondary-bg: rgba(255,255,255,0.5);
+  --surface-hover:        #f0f4f2;
+  --surface-dark:         #1e2d26;
+  --surface-dark-hover:   #263b31;
+  --surface-darkest:      #141f1a;
+
+  /* Text */
+  --text-primary:   rgba(0,0,0,0.87);
+  --text-secondary: rgba(0,0,0,0.55);
+  --text-tertiary:  rgba(0,0,0,0.35);
+  --on-brand:       #ffffff;
+  --on-reverse:     #ffffff;
+
+  /* Borders */
+  --border-primary:   rgba(0,0,0,0.12);
+  --border-secondary: rgba(0,0,0,0.06);
+  --border-selected:  rgba(0,176,80,0.8);
+
+  /* Backgrounds */
+  --bg-faint:   #f5f8f6;
+  --bg-subtle:  #eaf2ee;
+  --bg-hover:   rgba(0,0,0,0.05);
+  --input-bg:   rgba(0,0,0,0.04);
+}
+
+/* ── Dark mode ─────────────────────────────────────── */
+.dark {
+  /* Brand — CELLTRION Green (stays green in dark) */
+  --brand-primary:   #00C85E;
+  --brand-hover:     #00E06A;
+  --brand-dark:      #00B050;
+  --brand-secondary: #0d3320;
+  --brand-tertiary:  #0a2118;
+  --brand-muted:     #3d8a5e;
+
+  /* Status */
+  --success: #00C85E;
+  --warning: #F8D33F;
+  --danger:  #CF2828;
+
+  /* Surfaces — deep navy */
+  --surface-bg:           #161621;
+  --surface-secondary-bg: rgba(255,255,255,0.05);
+  --surface-hover:        #1e1e30;
+  --surface-dark:         #1a1a24;
+  --surface-dark-hover:   #26263a;
+  --surface-darkest:      #111118;
+
+  /* Text */
+  --text-primary:   rgba(255,255,255,0.90);
+  --text-secondary: rgba(255,255,255,0.68);
+  --text-tertiary:  rgba(255,255,255,0.50);
+  --on-brand:       #ffffff;
+  --on-reverse:     #1e1e1e;
+
+  /* Borders */
+  --border-primary:   rgba(255,255,255,0.18);
+  --border-secondary: rgba(255,255,255,0.11);
+  --border-selected:  rgba(0,200,94,0.7);
+
+  /* Backgrounds */
+  --bg-faint:   rgba(255,255,255,0.04);
+  --bg-subtle:  rgba(255,255,255,0.08);
+  --bg-hover:   rgba(255,255,255,0.08);
+  --input-bg:   rgba(255,255,255,0.06);
+}
+
+/* ── Layout background (Tailwind bg-background token) */
+:root {
+  --background: #F0F4F8;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border-color: rgba(0,0,0,0.07);
+  --topbar-bg: rgba(240,244,248,0.85);
+  --nav-hover-bg: rgba(0,0,0,0.04);
+  --nav-active-bg: rgba(0,176,80,0.09);
+}
+.dark {
+  --background: #0B0D1A;
+  --sidebar-bg: #0E1020;
+  --sidebar-border-color: rgba(255,255,255,0.13);
+  --topbar-bg: rgba(11,13,26,0.85);
+  --nav-hover-bg: rgba(255,255,255,0.05);
+  --nav-active-bg: rgba(0,200,94,0.12);
+}
+
+/* ── Custom Scrollbar ─────────────────────────────── */
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
