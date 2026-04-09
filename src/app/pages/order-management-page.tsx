@@ -1115,18 +1115,20 @@ export function OrderManagementPage() {
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: '#dc2626', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
+                      className="themed-checkbox"
                       checked={reportAsmDevYes}
                       onChange={e => setReportAsmDevYes(e.target.checked)}
-                      style={{ width: 13, height: 13, accentColor: '#00B050', cursor: 'pointer' }}
+                      style={{ width: 13, height: 13, cursor: 'pointer' }}
                     />
                     Yes
                   </label>
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
+                      className="themed-checkbox"
                       checked={reportAsmDevNo}
                       onChange={e => setReportAsmDevNo(e.target.checked)}
-                      style={{ width: 13, height: 13, accentColor: '#00B050', cursor: 'pointer' }}
+                      style={{ width: 13, height: 13, cursor: 'pointer' }}
                     />
                     No
                   </label>
@@ -1282,18 +1284,20 @@ export function OrderManagementPage() {
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                   <input
                     type="checkbox"
+                    className="themed-checkbox"
                     checked={inputBatch}
                     onChange={e => setInputBatch(e.target.checked)}
-                    style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                    style={{ width: 15, height: 15, cursor: 'pointer' }}
                   />
                   배치
                 </label>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                   <input
                     type="checkbox"
+                    className="themed-checkbox"
                     checked={inputQty}
                     onChange={e => setInputQty(e.target.checked)}
-                    style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                    style={{ width: 15, height: 15, cursor: 'pointer' }}
                   />
                   수량
                 </label>

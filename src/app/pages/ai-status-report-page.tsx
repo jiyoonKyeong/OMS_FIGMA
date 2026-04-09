@@ -527,6 +527,7 @@ export function AiStatusReportPage() {
                 <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
                   <input
                     type="checkbox"
+                    className="themed-checkbox"
                     checked={val === 'all' ? fDeviationAll : val === 'yes' ? fDeviationYes : fDeviationNo}
                     onChange={e => {
                       const checked = e.target.checked;
@@ -545,7 +546,7 @@ export function AiStatusReportPage() {
                         setFDeviationAll(true);
                       }
                     }}
-                    style={{ accentColor: '#00B050', width: 13, height: 13, cursor: 'pointer' }}
+                    style={{ width: 13, height: 13, cursor: 'pointer' }}
                   />
                   <span style={{
                     fontSize: 12.5,

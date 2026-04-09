@@ -384,18 +384,20 @@ export function ChargingAiFcstPage() {
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 <input
                   type="checkbox"
+                  className="themed-checkbox"
                   checked={inputBatch}
                   onChange={e => setInputBatch(e.target.checked)}
-                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                  style={{ width: 15, height: 15, cursor: 'pointer' }}
                 />
                 배치
               </label>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 <input
                   type="checkbox"
+                  className="themed-checkbox"
                   checked={inputQty}
                   onChange={e => setInputQty(e.target.checked)}
-                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                  style={{ width: 15, height: 15, cursor: 'pointer' }}
                 />
                 수량
               </label>

@@ -841,18 +841,20 @@ export function PoManagementPage() {
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
+                  className="themed-checkbox"
                   checked={inputBatch}
                   onChange={e => setInputBatch(e.target.checked)}
-                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                  style={{ width: 15, height: 15, cursor: 'pointer' }}
                 />
                 O
               </label>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
+                  className="themed-checkbox"
                   checked={inputQty}
                   onChange={e => setInputQty(e.target.checked)}
-                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                  style={{ width: 15, height: 15, cursor: 'pointer' }}
                 />
                 X
               </label>
