@@ -1,8 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router";
-import celltrionLogo from "figma:asset/bdbd951cb886b96cf8b8e0276c5d6d1c2d86fd8e.png";
-import celltrionMark from "figma:asset/9468a794f79c416700b3b3b2585521565764ee58.png";
-import celltrionLogoDark from "figma:asset/87a23d1e5ec894dee181d8bbc7eea99f06eb6113.png";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -286,14 +283,14 @@ export function Sidebar() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 10,
+              gap: 8,
             }}
           >
-            <img
-              src={isDark ? celltrionLogoDark : celltrionLogo}
-              alt="CELLTRION Pharm"
-              style={{ height: 44, width: 'auto', objectFit: 'contain' }}
-            />
+            <div className="logo-mark" aria-hidden="true">
+              <span className="logo-dot" />
+              <span className="logo-dot logo-dot--fade" />
+            </div>
+            <span className="logo-text">CELLTRION Pharm</span>
           </div>
         )}
         <button
