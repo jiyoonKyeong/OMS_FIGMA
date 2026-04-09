@@ -1596,7 +1596,7 @@ export function OrderManagementPage() {
                           <td key={ci} style={{
                             padding: '10px 8px', fontSize: 12.5,
                             textAlign: 'right', fontVariantNumeric: 'tabular-nums',
-                            background: cell.v !== null && ci === 0 ? BG_FULL_L : 'transparent',
+                            background: cell.v !== null && ci === 0 ? (isDark ? BG_FULL_D : BG_FULL_L) : 'transparent',
                             color: cell.v !== null ? 'var(--text-primary)' : 'transparent',
                             fontWeight: cell.v !== null ? 600 : 400,
                             borderRight: '1px solid var(--border-secondary)',
@@ -1659,7 +1659,7 @@ export function OrderManagementPage() {
                           <td key={ci} style={{
                             padding: '10px 8px', fontSize: 12.5,
                             textAlign: 'right', fontVariantNumeric: 'tabular-nums',
-                            background: cell.v !== null && ci <= 1 ? BG_FULL_L : 'transparent',
+                            background: cell.v !== null && ci <= 1 ? (isDark ? BG_FULL_D : BG_FULL_L) : 'transparent',
                             color: cell.v !== null ? 'var(--text-primary)' : 'transparent',
                             fontWeight: cell.v !== null ? 600 : 400,
                             borderRight: '1px solid var(--border-secondary)',
