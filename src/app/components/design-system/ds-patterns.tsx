@@ -145,7 +145,7 @@ export function DsPatterns() {
                   <div className="w-6 h-6 rounded-corner-full" style={{ background: '#00B050' }} />
                   <div className="w-6 h-6 rounded-corner-full" style={{ background: '#00B050' }} />
                 </div>
-                <span className="text-label font-semibold text-text-primary ml-sm">CELLTRION PHARMA</span>
+                <span className="text-label font-semibold text-text-primary ml-sm">Order Mgmt</span>
               </div>
               <nav className="flex items-center gap-md">
                 {['Order Mgmt.', '계획 정보', '공급 정보', '레포트', '계약서'].map((item, i) => (

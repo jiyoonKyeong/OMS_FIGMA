@@ -141,3 +141,9 @@
 .dark * {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* Native <select> dropdown list — OS rendering varies; improves contrast where supported */
+.dark select option {
+  background-color: var(--surface-bg);
+  color: var(--text-primary);
+}

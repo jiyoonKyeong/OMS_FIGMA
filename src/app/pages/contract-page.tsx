@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import {
-  Search, Download, Upload, Save,
+  Search, Upload,
   SlidersHorizontal, X, RotateCcw, FileText, Paperclip, CheckCircle2,
 } from 'lucide-react';
 import { useTheme } from '../contexts/theme-context';
@@ -79,14 +79,16 @@ function selectStyle(active: boolean, isDark: boolean): React.CSSProperties {
    계약서 등록 모달
 ───────────────────────────────────────────────────────── */
 function ContractUploadModal({
-  row, isDark, existing, onRegister, onClose,
+  row, isDark, existing, onRegister, onClose, isCreate = false,
 }: {
   row: ContractRow;
   isDark: boolean;
   existing?: Registration;
   onRegister: (reg: Registration) => void;
   onClose: () => void;
+  isCreate?: boolean;
 }) {
+  const [rowDraft, setRowDraft] = useState<ContractRow>(row);
   const [detail, setDetail] = useState(existing?.detail ?? '');
   const [file,   setFile]   = useState<File | null>(null);
   const fileRef             = useRef<HTMLInputElement>(null);
@@ -105,6 +107,18 @@ function ContractUploadModal({
     padding: '9px 12px', fontSize: 12.5,
     borderRight: '1px solid var(--border-secondary)',
     textAlign: 'center', whiteSpace: 'nowrap', color: 'var(--text-secondary)',
+  };
+  const inputCell: React.CSSProperties = {
+    width: '100%',
+    padding: '4px 6px',
+    border: '1px solid var(--border-secondary)',
+    borderRadius: 6,
+    fontSize: 12,
+    color: 'var(--text-primary)',
+    background: 'var(--input-bg)',
+    outline: 'none',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
   };
 
   function handleSubmit() {
@@ -135,7 +149,7 @@ function ContractUploadModal({
           background: isDark ? 'rgba(255,255,255,0.03)' : '#f7f8fa',
         }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
-            계약서 등록{existing ? ' (수정)' : ''}
+            {isCreate ? '계약서 등록' : `계약서 등록${existing ? ' (수정)' : ''}`}
           </span>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 4,
@@ -164,20 +178,64 @@ function ContractUploadModal({
               <tbody>
                 <tr>
                   <td style={TD}>
-                    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: tagBg(row.구분, isDark), color: tagColor(row.구분) }}>{row.구분}</span>
+                    {isCreate ? (
+                      <input
+                        value={rowDraft.구분}
+                        onChange={e => setRowDraft(prev => ({ ...prev, 구분: e.target.value }))}
+                        placeholder="구분"
+                        style={inputCell}
+                      />
+                    ) : (
+                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: tagBg(rowDraft.구분, isDark), color: tagColor(rowDraft.구분) }}>{rowDraft.구분}</span>
+                    )}
                   </td>
                   <td style={{ ...TD, textAlign: 'left', color: '#00B050', fontWeight: 600 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <FileText size={13} style={{ color: '#00B050', flexShrink: 0 }} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.계약서명}</span>
+                      {isCreate ? (
+                        <input
+                          value={rowDraft.계약서명}
+                          onChange={e => setRowDraft(prev => ({ ...prev, 계약서명: e.target.value }))}
+                          placeholder="계약서명"
+                          style={{ ...inputCell, border: 'none', background: 'transparent', padding: 0 }}
+                        />
+                      ) : (
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rowDraft.계약서명}</span>
+                      )}
                     </div>
                   </td>
-                  <td style={TD}>{row.체결일}</td>
-                  <td style={TD}>{row.종료일}</td>
                   <td style={TD}>
-                    <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: isDark ? 'rgba(0,176,80,0.12)' : '#edfaf3', color: '#00B050' }}>{row.자동갱신}</span>
+                    {isCreate ? (
+                      <input type="date" value={rowDraft.체결일} onChange={e => setRowDraft(prev => ({ ...prev, 체결일: e.target.value }))} style={inputCell} />
+                    ) : rowDraft.체결일}
                   </td>
-                  <td style={{ ...TD, color: 'var(--text-primary)', fontWeight: 500 }}>{row.담당자}</td>
+                  <td style={TD}>
+                    {isCreate ? (
+                      <input type="date" value={rowDraft.종료일} onChange={e => setRowDraft(prev => ({ ...prev, 종료일: e.target.value }))} style={inputCell} />
+                    ) : rowDraft.종료일}
+                  </td>
+                  <td style={TD}>
+                    {isCreate ? (
+                      <input
+                        value={rowDraft.자동갱신}
+                        onChange={e => setRowDraft(prev => ({ ...prev, 자동갱신: e.target.value }))}
+                        placeholder="자동 갱신"
+                        style={inputCell}
+                      />
+                    ) : (
+                      <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: isDark ? 'rgba(0,176,80,0.12)' : '#edfaf3', color: '#00B050' }}>{rowDraft.자동갱신}</span>
+                    )}
+                  </td>
+                  <td style={{ ...TD, color: 'var(--text-primary)', fontWeight: 500 }}>
+                    {isCreate ? (
+                      <input
+                        value={rowDraft.담당자}
+                        onChange={e => setRowDraft(prev => ({ ...prev, 담당자: e.target.value }))}
+                        placeholder="담당자"
+                        style={inputCell}
+                      />
+                    ) : rowDraft.담당자}
+                  </td>
                   <td style={TD}>
                     <button onClick={() => fileRef.current?.click()} style={{
                       background: displayFileName ? (isDark ? 'rgba(0,176,80,0.15)' : '#edfaf3') : 'none',
@@ -198,7 +256,21 @@ function ContractUploadModal({
                     </button>
                     <input ref={fileRef} type="file" style={{ display: 'none' }}
                       accept=".pdf,.doc,.docx,.hwp,.xlsx"
-                      onChange={e => setFile(e.target.files?.[0] ?? null)}
+                      onChange={e => {
+                        const picked = e.target.files?.[0] ?? null;
+                        setFile(picked);
+                        if (isCreate && picked) {
+                          setRowDraft(prev => ({
+                            ...prev,
+                            구분: prev.구분 || '충전',
+                            계약서명: prev.계약서명 || picked.name.replace(/\.[^/.]+$/, ''),
+                            체결일: prev.체결일 || '2023-10-01',
+                            종료일: prev.종료일 || '2025-10-01',
+                            자동갱신: prev.자동갱신 || '2년',
+                            담당자: prev.담당자 || '김성환',
+                          }));
+                        }
+                      }}
                     />
                   </td>
                 </tr>
@@ -421,6 +493,7 @@ export function ContractPage() {
   // 모달 state
   const [uploadRow, setUploadRow]   = useState<ContractRow | null>(null); // 등록 모달
   const [detailRow, setDetailRow]   = useState<ContractRow | null>(null); // 상세 모달
+  const [registrationOpen, setRegistrationOpen] = useState(false);
 
   const resetFilters = () => { setFProcess(''); setFManager(''); setFName(''); };
 
@@ -695,19 +768,7 @@ export function ContractPage() {
         borderTop: '1px solid var(--border-secondary)', borderRadius: '0 0 14px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexShrink: 0,
       }}>
-        {[{ label: 'Download', icon: <Download size={13} /> }, { label: 'Upload', icon: <Upload size={13} /> }].map(btn => (
-          <button key={btn.label} style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-            background: 'var(--surface-bg)', border: '1px solid var(--border-primary)',
-            borderRadius: 10, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)',
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-          >{btn.icon}{btn.label}</button>
-        ))}
-        <div style={{ width: 1, height: 20, background: 'var(--border-primary)', margin: '0 2px' }} />
-        <button style={{
+        <button onClick={() => setRegistrationOpen(true)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
           background: '#00B050', border: 'none', borderRadius: 10,
           fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
@@ -715,7 +776,7 @@ export function ContractPage() {
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
         >
-          <Save size={13} /> Save
+          계약서 등록
         </button>
       </div>
 
@@ -738,6 +799,15 @@ export function ContractPage() {
           reg={registrations[detailRow.id]}
           onEdit={() => setUploadRow(detailRow)}
           onClose={() => setDetailRow(null)}
+        />
+      )}
+      {registrationOpen && (
+        <ContractUploadModal
+          row={{ id: '__new__', 구분: '', 계약서명: '', 체결일: '', 종료일: '', 자동갱신: '', 담당자: '' }}
+          isDark={isDark}
+          onRegister={() => {}}
+          onClose={() => setRegistrationOpen(false)}
+          isCreate
         />
       )}
     </div>

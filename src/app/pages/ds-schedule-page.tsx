@@ -34,9 +34,8 @@ const DATA: DsRow[] = [
   { id: 'd09', 구분: '상업', 제품명: 'CT-F43 90mg',         batchNo: '#25',    출진시작일: '2025-11-25', poNo: '4000071487', dsLot: '25200N001',                  dsCtDate: '2025-11-14', dsCtphDate: '',           여부: '',   fullFact: 'TBD', memo: '' },
 ];
 
-const PRODUCTS  = [...new Set(DATA.map(d => d.제품명))];
-const DIVISIONS = ['상업', '임상'];
-const YEOBOO    = ['OK', 'NG'];
+const PRODUCTS  = ['CT-P39 150mg', '유플라이마 40mg', 'foatlak 12mg 29G'];
+const PROCESSES = ['상업', '개발'];
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function FilterLabel({ label }: { label: string }) {
@@ -134,9 +133,12 @@ export function DsSchedulePage() {
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [keyword,    setKeyword]    = useState('');
-  const [fDiv,       setFDiv]       = useState('');
+  const [fProcess,   setFProcess]   = useState('');
   const [fProduct,   setFProduct]   = useState('');
-  const [fYeoboo,    setFYeoboo]    = useState('');
+  const [fBatchNo,   setFBatchNo]   = useState('');
+  const [fPoNo,      setFPoNo]      = useState('');
+  const [fTransferFrom, setFTransferFrom] = useState('');
+  const [fTransferTo,   setFTransferTo]   = useState('');
 
   // 인라인 편집을 위한 local state
   const [tableData, setTableData] = useState<DsRow[]>(DATA);
@@ -145,17 +147,34 @@ export function DsSchedulePage() {
     setTableData(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
   }
 
-  const resetFilters = () => { setFDiv(''); setFProduct(''); setFYeoboo(''); };
+  const resetFilters = () => {
+    setFProcess('');
+    setFProduct('');
+    setFBatchNo('');
+    setFPoNo('');
+    setFTransferFrom('');
+    setFTransferTo('');
+  };
 
   const badges: { label: string; onRemove: () => void }[] = [];
-  if (fDiv)     badges.push({ label: `구분: ${fDiv}`,       onRemove: () => setFDiv('') });
+  if (fProcess) badges.push({ label: `Process: ${fProcess}`, onRemove: () => setFProcess('') });
   if (fProduct) badges.push({ label: `제품명: ${fProduct}`, onRemove: () => setFProduct('') });
-  if (fYeoboo)  badges.push({ label: `여부: ${fYeoboo}`,   onRemove: () => setFYeoboo('') });
+  if (fBatchNo) badges.push({ label: `Batch No: ${fBatchNo}`, onRemove: () => setFBatchNo('') });
+  if (fPoNo)    badges.push({ label: `PO No: ${fPoNo}`, onRemove: () => setFPoNo('') });
+  if (fTransferFrom || fTransferTo) {
+    badges.push({
+      label: `Transfer Date: ${fTransferFrom || '-'} ~ ${fTransferTo || '-'}`,
+      onRemove: () => { setFTransferFrom(''); setFTransferTo(''); },
+    });
+  }
 
   const rows = tableData.filter(r => {
-    if (fDiv     && r.구분 !== fDiv) return false;
+    if (fProcess && r.구분 !== fProcess) return false;
     if (fProduct && r.제품명 !== fProduct) return false;
-    if (fYeoboo  && r.여부 !== fYeoboo) return false;
+    if (fBatchNo && !r.batchNo.toLowerCase().includes(fBatchNo.toLowerCase())) return false;
+    if (fPoNo && !r.poNo.toLowerCase().includes(fPoNo.toLowerCase())) return false;
+    if (fTransferFrom && r.dsCtDate < fTransferFrom) return false;
+    if (fTransferTo && r.dsCtDate > fTransferTo) return false;
     if (keyword) {
       const kw = keyword.toLowerCase();
       if (![r.구분, r.제품명, r.batchNo, r.poNo, r.dsLot, r.dsCtDate].some(v => v.toLowerCase().includes(kw))) return false;
@@ -285,10 +304,10 @@ export function DsSchedulePage() {
         <div style={{ padding: '14px 24px 16px', display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap' }}>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <FilterLabel label="구분" />
-            <select value={fDiv} onChange={e => setFDiv(e.target.value)} style={{ ...selectStyle(!!fDiv, isDark), minWidth: 80 }}>
+            <FilterLabel label="Process" />
+            <select value={fProcess} onChange={e => setFProcess(e.target.value)} style={{ ...selectStyle(!!fProcess, isDark), minWidth: 120 }}>
               <option value="">전체</option>
-              {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              {PROCESSES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
@@ -301,11 +320,42 @@ export function DsSchedulePage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <FilterLabel label="여부" />
-            <select value={fYeoboo} onChange={e => setFYeoboo(e.target.value)} style={{ ...selectStyle(!!fYeoboo, isDark), minWidth: 80 }}>
-              <option value="">전체</option>
-              {YEOBOO.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <FilterLabel label="Batch No" />
+            <input
+              type="text"
+              value={fBatchNo}
+              onChange={e => setFBatchNo(e.target.value)}
+              style={{ padding: '6px 8px', fontSize: 12.5, border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--text-primary)', outline: 'none', fontFamily: 'inherit', minWidth: 120 }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <FilterLabel label="PO No" />
+            <input
+              type="text"
+              value={fPoNo}
+              onChange={e => setFPoNo(e.target.value)}
+              style={{ padding: '6px 8px', fontSize: 12.5, border: '1px solid var(--border-primary)', borderRadius: 8, background: 'var(--input-bg)', color: 'var(--text-primary)', outline: 'none', fontFamily: 'inherit', minWidth: 120 }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <FilterLabel label="Transfer Date" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                type="date"
+                value={fTransferFrom}
+                onChange={e => setFTransferFrom(e.target.value)}
+                style={{ padding: '6px 8px', border: '1px solid var(--border-primary)', borderRadius: 7, fontSize: 12, color: 'var(--text-primary)', background: 'var(--input-bg)', outline: 'none', fontFamily: 'inherit', colorScheme: isDark ? 'dark' : 'light' }}
+              />
+              <span style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>~</span>
+            </div>
+            <input
+              type="date"
+              value={fTransferTo}
+              onChange={e => setFTransferTo(e.target.value)}
+              style={{ padding: '6px 8px', border: '1px solid var(--border-primary)', borderRadius: 7, fontSize: 12, color: 'var(--text-primary)', background: 'var(--input-bg)', outline: 'none', fontFamily: 'inherit', colorScheme: isDark ? 'dark' : 'light' }}
+            />
           </div>
 
           <div style={{ alignSelf: 'flex-end' }}>

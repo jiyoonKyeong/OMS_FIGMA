@@ -17,7 +17,7 @@ const CRUMBS: BreadcrumbEntry[] = [
   { path: '/plan/po',                 label: 'PO 관리',              parent: '계획 정보' },
   // 공급 정보
   { path: '/supply',                  label: '공급 정보' },
-  { path: '/supply/ai',               label: '충전/AI 공급계획',    parent: '공급 정보' },
+  { path: '/supply/ai',               label: '충전/조립 공급계획',    parent: '공급 정보' },
   { path: '/supply/assembly',         label: '조립/포장 공급계획',  parent: '공급 정보' },
   { path: '/supply/lp',               label: 'L&P 공급계획',        parent: '공급 정보' },
   // 레포트
@@ -25,7 +25,7 @@ const CRUMBS: BreadcrumbEntry[] = [
   { path: '/report/supply',           label: 'FCST 대비 공급 레포트', parent: '레포트' },
   { path: '/report/ai',               label: '충전/AI Status',         parent: '레포트' },
   { path: '/report/assembly',         label: '조립/포장 Status',       parent: '레포트' },
-  { path: '/report/ds',               label: 'DS Status',              parent: '레포트' },
+  { path: '/report/ds',               label: '재고현황',                parent: '레포트' },
   // 단일
   { path: '/contract',                label: '계약서' },
   { path: '/schedule',                label: 'DS 일정협의' },
@@ -52,7 +52,7 @@ export function Topbar() {
     <header className="topbar-shell">
       {/* Breadcrumb */}
       <div className="topbar-breadcrumb">
-        <span className="breadcrumb-root">CELLTRION PHARMA</span>
+        <span className="breadcrumb-root">Order Mgmt</span>
         {crumbs.map((c, i) => (
           <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <ChevronRight size={13} className="breadcrumb-sep" />

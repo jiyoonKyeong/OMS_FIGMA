@@ -11,7 +11,7 @@ const REPORT_TABS = [
   { label: 'FCST 대비 공급 레포트', path: '/report/supply' },
   { label: '충전/AI Status',         path: '/report/ai' },
   { label: '조립/포장 Status',       path: '/report/assembly' },
-  { label: 'DS Status',              path: '/report/ds' },
+  { label: '재고현황',                path: '/report/ds' },
 ];
 
 /* ── Types ───────────────────────────────────────────────── */
@@ -247,7 +247,9 @@ export function AiStatusReportPage() {
   const [fProcess,   setFProcess]   = useState('');   // '' = 전체
   const [fProduct,   setFProduct]   = useState('');   // '' = 전체
   const [fBatchNo,   setFBatchNo]   = useState('');
-  const [fDeviation, setFDeviation] = useState<'all' | 'yes' | 'no'>('all');
+  const [fDeviationAll, setFDeviationAll] = useState(true);
+  const [fDeviationYes, setFDeviationYes] = useState(false);
+  const [fDeviationNo,  setFDeviationNo]  = useState(false);
   const [fStartFrom, setFStartFrom] = useState('');
   const [fEndFrom,   setFEndFrom]   = useState('');
 
@@ -257,7 +259,7 @@ export function AiStatusReportPage() {
 
   const resetFilters = () => {
     setFProcess(''); setFProduct(''); setFBatchNo('');
-    setFDeviation('all'); setFStartFrom('');
+    setFDeviationAll(true); setFDeviationYes(false); setFDeviationNo(false); setFStartFrom('');
     setFEndFrom('');
   };
 
@@ -266,7 +268,16 @@ export function AiStatusReportPage() {
   if (fProcess)             activeBadges.push({ label: `Process: ${fProcess}`,   onRemove: () => setFProcess('') });
   if (fProduct)             activeBadges.push({ label: `Product: ${fProduct}`,   onRemove: () => setFProduct('') });
   if (fBatchNo)             activeBadges.push({ label: `Batch No: ${fBatchNo}`,  onRemove: () => setFBatchNo('') });
-  if (fDeviation !== 'all') activeBadges.push({ label: `Deviation: ${fDeviation === 'yes' ? 'Yes' : 'No'}`, onRemove: () => setFDeviation('all') });
+  if (!fDeviationAll) {
+    const devLabel = [
+      fDeviationYes ? 'Yes' : '',
+      fDeviationNo ? 'No' : '',
+    ].filter(Boolean).join(', ');
+    activeBadges.push({
+      label: `Deviation: ${devLabel || '전체'}`,
+      onRemove: () => { setFDeviationAll(true); setFDeviationYes(false); setFDeviationNo(false); },
+    });
+  }
   if (fStartFrom) activeBadges.push({ label: `Start Date: ${fStartFrom}`, onRemove: () => setFStartFrom('') });
   if (fEndFrom)   activeBadges.push({ label: `End Date: ${fEndFrom}`,     onRemove: () => setFEndFrom('') });
 
@@ -317,8 +328,10 @@ export function AiStatusReportPage() {
     if (fProcess && r.process !== fProcess) return false;
     if (fProduct && r.product !== fProduct) return false;
     if (fBatchNo && !r.batchNo.toLowerCase().includes(fBatchNo.toLowerCase())) return false;
-    if (fDeviation === 'yes' && r.deviation !== 'O') return false;
-    if (fDeviation === 'no'  && r.deviation === 'O') return false;
+    if (!fDeviationAll) {
+      if (fDeviationYes && !fDeviationNo && r.deviation !== 'O') return false;
+      if (!fDeviationYes && fDeviationNo && r.deviation === 'O') return false;
+    }
     if (fStartFrom && r.startDate < fStartFrom) return false;
     if (fEndFrom   && r.endDate   < fEndFrom)   return false;
     return true;
@@ -506,16 +519,34 @@ export function AiStatusReportPage() {
             />
           </div>
 
-          {/* ── Deviation ──────────────────────────── */}
+          {/* ── Deviation (checkbox) ───────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <FilterLabel label="Deviation" />
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', height: 32 }}>
               {([['all', '전체'], ['yes', 'Yes'], ['no', 'No']] as const).map(([val, lbl]) => (
                 <label key={val} style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
-                  <input type="radio" name="dev_filter" value={val}
-                    checked={fDeviation === val}
-                    onChange={() => setFDeviation(val)}
-                    style={{ accentColor: '#00B050', width: 13, height: 13, cursor: 'pointer' }} />
+                  <input
+                    type="checkbox"
+                    checked={val === 'all' ? fDeviationAll : val === 'yes' ? fDeviationYes : fDeviationNo}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      if (val === 'all') {
+                        setFDeviationAll(checked);
+                        if (checked) {
+                          setFDeviationYes(false);
+                          setFDeviationNo(false);
+                        }
+                        return;
+                      }
+                      if (val === 'yes') setFDeviationYes(checked);
+                      if (val === 'no') setFDeviationNo(checked);
+                      if (checked) setFDeviationAll(false);
+                      if (!checked && ((val === 'yes' && !fDeviationNo) || (val === 'no' && !fDeviationYes))) {
+                        setFDeviationAll(true);
+                      }
+                    }}
+                    style={{ accentColor: '#00B050', width: 13, height: 13, cursor: 'pointer' }}
+                  />
                   <span style={{
                     fontSize: 12.5,
                     color: val === 'yes' ? '#dc2626' : 'var(--text-primary)',

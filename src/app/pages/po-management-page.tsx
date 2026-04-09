@@ -3,6 +3,7 @@ import {
   Search, Download, Upload, Save, Plus,
   SlidersHorizontal, ChevronDown, X, RotateCcw,
   ChevronLeft, ChevronRight as ChevronRightIcon,
+  ZoomIn,
   Trash2,
 } from 'lucide-react';
 import { useTheme } from '../contexts/theme-context';
@@ -99,10 +100,13 @@ const mockData: PORow[] = [
 
 /* ── Filters ──────────────────────────────────────────── */
 const FILTERS = [
-  { key: 'process',     label: 'Process',    options: ['전체','충전','AI'] },
-  { key: 'product',     label: 'Product',    options: ['전체','CT-P13 120mg','CT-P17 25mg','CT-P39 150mg'] },
-  { key: 'formulation', label: '제형',        options: ['전체','PFS','AI','PFS,L'] },
-  { key: 'country',     label: '국가',        options: ['전체','EU','CA','US'] },
+  { key: 'requestMonth', label: '납기 요청 월',       options: ['전체','2025.11','2025.12','2026.01'] },
+  { key: 'poNo',         label: 'PO No.',            options: ['전체','4500069625','A0000001','A0000002','A0000003'] },
+  { key: 'process',      label: 'Process',           options: ['전체','충전','조립','포장','L&P'] },
+  { key: 'formulation',  label: '제형 구분',          options: ['전체','PFS','PFS-S','AI','vial'] },
+  { key: 'step',         label: '공정 구분',          options: ['전체','라벨링','AI 수동 라벨링','수동 라벨링','수동 카토닝'] },
+  { key: 'country',      label: '국가 구분',          options: ['전체','CA','AU','TR','TW'] },
+  { key: 'pack',         label: 'Pack 구분',         options: ['전체','1','2','3'] },
 ];
 
 function fmt(v: number) { return v.toLocaleString('ko-KR'); }
@@ -277,6 +281,96 @@ function DateInput({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
+/* ── 배치 현황 Popup (/report/ai DS 추적 스타일) ───────── */
+function BatchStatusPopup({ row, onClose, isDark }: { row: PORow; onClose: () => void; isDark: boolean }) {
+  const bdr = 'var(--border-primary)';
+  const TH: React.CSSProperties = {
+    padding: '8px 10px', fontSize: 11.5, fontWeight: 700,
+    background: isDark ? 'rgba(0,176,80,0.12)' : '#e6f7ee',
+    color: '#00B050', borderBottom: `1px solid ${bdr}`,
+    borderRight: `1px solid ${bdr}`, whiteSpace: 'nowrap', textAlign: 'left',
+  };
+  const TD: React.CSSProperties = {
+    padding: '8px 10px', fontSize: 12.5,
+    color: 'var(--text-primary)', borderBottom: `1px solid ${bdr}`,
+    borderRight: `1px solid ${bdr}`, whiteSpace: 'nowrap',
+  };
+
+  const detail = {
+    batchStatus: row.batchStatus ? '포장' : '-',
+    startDate: row.mfRequestDate || '-',
+    endDate: row.deliveryDueDate || '-',
+    coaComp: row.deliveryDoneDate || '-',
+    shipPacket: row.shipQty ? String(row.shipQty) : '-',
+    shipDate: row.deliveryDoneDate || '-',
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0, zIndex: 9998,
+        background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)',
+      }} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 9999, minWidth: 940,
+        background: 'var(--surface-bg)',
+        border: `1px solid ${bdr}`,
+        borderRadius: 14,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.22)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px',
+          background: isDark ? 'rgba(0,176,80,0.10)' : '#f0faf4',
+          borderBottom: `1px solid ${bdr}`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ZoomIn size={16} style={{ color: '#00B050' }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>배치 현황</span>
+          </div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-tertiary)', display: 'flex', padding: 2, borderRadius: 6,
+          }}>
+            <X size={16} />
+          </button>
+        </div>
+        <div style={{ padding: '16px 18px 20px' }}>
+          <table style={{ borderCollapse: 'collapse', width: '100%', border: `1px solid ${bdr}`, borderRadius: 8, overflow: 'hidden' }}>
+            <thead>
+              <tr>
+                {['배치 현황', 'Product', 'Batch No', '배치 사이즈', '제형', '공정', '국가', 'Pack', 'Start Date', 'End Date', 'COA Comp.', '출하패킷전달', '선적 일자'].map(h => (
+                  <th key={h} style={TH}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={TD}>{detail.batchStatus}</td>
+                <td style={TD}>{row.product}</td>
+                <td style={TD}>{row.poNo}</td>
+                <td style={TD}>{row.batchSize ? fmt(row.batchSize) : '-'}</td>
+                <td style={TD}>{row.formulation || '-'}</td>
+                <td style={TD}>{row.step || '-'}</td>
+                <td style={TD}>{row.country || '-'}</td>
+                <td style={TD}>{row.pack ?? '-'}</td>
+                <td style={TD}>{detail.startDate}</td>
+                <td style={TD}>{detail.endDate}</td>
+                <td style={TD}>{detail.coaComp}</td>
+                <td style={TD}>{detail.shipPacket}</td>
+                <td style={{ ...TD, borderRight: 'none', fontWeight: 600, color: '#00B050' }}>{detail.shipDate}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ── PO Registration Modal ────────────────────────────── */
 const MODAL_COLUMNS = [
   { key: 'process',      label: 'Process',    width: 80 },
@@ -299,9 +393,64 @@ function emptyModalRow(): ModalRow {
   return { process: '', product: '', batchSize: '', formulation: '', step: '', country: '', pack: '', orderQty: '', unitPrice: '', orderAmount: '', deliveryReq: '', invoiceAttach: '' };
 }
 
-function PoRegistrationModal({ onClose }: { onClose: () => void }) {
-  const [poNo, setPoNo] = useState('');
-  const [rows, setRows] = useState<ModalRow[]>(() => Array.from({ length: 5 }, emptyModalRow));
+function toNum(v: string): number {
+  const n = Number(v.replace(/,/g, '').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+function poRowToModalRow(row: PORow): ModalRow {
+  return {
+    process: row.process ?? '',
+    product: row.product ?? '',
+    batchSize: row.batchSize ? String(row.batchSize) : '',
+    formulation: row.formulation ?? '',
+    step: row.step ?? '',
+    country: row.country ?? '',
+    pack: row.pack ? String(row.pack) : '',
+    orderQty: row.orderQty ? String(row.orderQty) : '',
+    unitPrice: row.unitPrice ? String(row.unitPrice) : '',
+    orderAmount: row.orderAmount ? String(row.orderAmount) : '',
+    deliveryReq: row.deliveryDueDate ?? '',
+    invoiceAttach: row.invoiceFile ? '첨부됨' : '',
+  };
+}
+
+function modalRowToPoRow(poNo: string, row: ModalRow, base?: PORow): PORow {
+  return {
+    poNo: poNo.trim(),
+    process: row.process || base?.process || '',
+    product: row.product || base?.product || '',
+    batchSize: row.batchSize ? toNum(row.batchSize) : (base?.batchSize ?? null),
+    formulation: row.formulation || base?.formulation || '',
+    step: row.step || base?.step || '',
+    country: row.country || base?.country || '',
+    pack: row.pack ? toNum(row.pack) : (base?.pack ?? null),
+    orderQty: row.orderQty ? toNum(row.orderQty) : (base?.orderQty ?? 0),
+    unitPrice: row.unitPrice ? toNum(row.unitPrice) : (base?.unitPrice ?? 0),
+    orderAmount: row.orderAmount ? toNum(row.orderAmount) : (base?.orderAmount ?? 0),
+    mfRequestDate: base?.mfRequestDate ?? row.deliveryReq ?? '',
+    shipQty: base?.shipQty ?? 0,
+    shipAmount: base?.shipAmount ?? 0,
+    deliveryDueDate: row.deliveryReq || base?.deliveryDueDate || '',
+    deliveryDoneDate: base?.deliveryDoneDate ?? '',
+    invoiceIssued: base?.invoiceIssued ?? 0,
+    invoiceFile: row.invoiceAttach ? true : (base?.invoiceFile ?? false),
+    batchStatus: base?.batchStatus ?? false,
+    memo: base?.memo ?? '',
+  };
+}
+
+function PoRegistrationModal({
+  onClose, mode, initialPoNo, initialRows, onSubmit,
+}: {
+  onClose: () => void;
+  mode: 'create' | 'edit';
+  initialPoNo?: string;
+  initialRows?: ModalRow[];
+  onSubmit: (poNo: string, rows: ModalRow[]) => void;
+}) {
+  const [poNo, setPoNo] = useState(initialPoNo ?? '');
+  const [rows, setRows] = useState<ModalRow[]>(() => initialRows && initialRows.length > 0 ? initialRows : Array.from({ length: 5 }, emptyModalRow));
   const [poFile, setPoFile] = useState<File | null>(null);
   const poFileRef = useRef<HTMLInputElement>(null);
   const invoiceRefs = useRef<Record<number, HTMLInputElement | null>>({});
@@ -314,7 +463,8 @@ function PoRegistrationModal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = () => {
     if (!poNo.trim()) { alert('PO No를 입력해주세요.'); return; }
-    alert(`PO ${poNo} 등록이 완료되었습니다. (${rows.length}건)`);
+    onSubmit(poNo, rows);
+    alert(`PO ${poNo} ${mode === 'edit' ? '수정' : '등록'}이 완료되었습니다. (${rows.length}건)`);
     onClose();
   };
 
@@ -337,7 +487,7 @@ function PoRegistrationModal({ onClose }: { onClose: () => void }) {
           padding: '18px 24px', borderBottom: '2px solid var(--brand-primary)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>PO 등록</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{mode === 'edit' ? 'PO 수정' : 'PO 등록'}</span>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)',
             display: 'flex', alignItems: 'center', padding: 4,
@@ -347,10 +497,11 @@ function PoRegistrationModal({ onClose }: { onClose: () => void }) {
         {/* PO No */}
         <div style={{ padding: '16px 24px 12px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>PO No</label>
-          <input value={poNo} onChange={e => setPoNo(e.target.value)} placeholder="PO 번호 입력"
+          <input value={poNo} onChange={e => setPoNo(e.target.value)} placeholder="PO 번호 입력" readOnly={mode === 'edit'}
             style={{
               padding: '8px 12px', border: '1px solid var(--border-primary)', borderRadius: 8,
-              fontSize: 13, color: 'var(--text-primary)', background: 'var(--input-bg)',
+              fontSize: 13, color: 'var(--text-primary)',
+              background: mode === 'edit' ? 'var(--bg-faint)' : 'var(--input-bg)',
               outline: 'none', fontFamily: 'inherit', width: 200,
             }} />
         </div>
@@ -469,7 +620,7 @@ function PoRegistrationModal({ onClose }: { onClose: () => void }) {
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
-            PO 등록
+            {mode === 'edit' ? 'PO 수정' : 'PO 등록'}
           </button>
         </div>
       </div>
@@ -479,13 +630,17 @@ function PoRegistrationModal({ onClose }: { onClose: () => void }) {
 
 /* ── Page ─────────────────────────────────────────────── */
 export function PoManagementPage() {
+  const [poRows, setPoRows] = useState<PORow[]>(mockData);
   const [filterOpen,   setFilterOpen]   = useState(false);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [activeTags,   setActiveTags]   = useState<string[]>([]);
   const [keyword,      setKeyword]      = useState('');
   const [page,         setPage]         = useState(1);
-  const [showPoModal,  setShowPoModal]  = useState(false);
+  const [poModal, setPoModal] = useState<{ mode: 'create' | 'edit'; poNo?: string } | null>(null);
   const [memoValues,   setMemoValues]   = useState<Record<number, string>>({});
+  const [inputBatch, setInputBatch] = useState(false);
+  const [inputQty, setInputQty] = useState(true);
+  const [statusPopupRow, setStatusPopupRow] = useState<PORow | null>(null);
   const { isDark } = useTheme();
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -500,7 +655,7 @@ export function PoManagementPage() {
   const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && uploadTarget !== null) {
-      alert(`"${file.name}" 파일이 PO ${mockData[uploadTarget]?.poNo}에 업로드되었습니다.`);
+      alert(`"${file.name}" 파일이 PO ${poRows[uploadTarget]?.poNo}에 업로드되었습니다.`);
     }
     e.target.value = '';
     setUploadTarget(null);
@@ -508,7 +663,7 @@ export function PoManagementPage() {
 
   const ROWS_PER_PAGE = 20;
 
-  const filtered = mockData.filter(row => {
+  const filtered = poRows.filter(row => {
     if (keyword) {
       const kw = keyword.toLowerCase();
       if (
@@ -520,6 +675,15 @@ export function PoManagementPage() {
     for (const tag of activeTags) {
       const fv = filterValues[tag];
       if (!fv || fv === '전체') continue;
+      if (tag === 'requestMonth') {
+        const month = row.deliveryDueDate ? row.deliveryDueDate.slice(0, 7) : '';
+        if (month !== fv) return false;
+        continue;
+      }
+      if (tag === 'pack') {
+        if (String(row.pack ?? '') !== fv) return false;
+        continue;
+      }
       if ((row as any)[tag] !== fv) return false;
     }
     return true;
@@ -538,7 +702,29 @@ export function PoManagementPage() {
     setFilterValues(prev => ({ ...prev, [key]: '전체' }));
     setActiveTags(prev => prev.filter(t => t !== key));
   };
-  const resetAll = () => { setFilterValues({}); setActiveTags([]); setKeyword(''); };
+  const resetAll = () => { setFilterValues({}); setActiveTags([]); setKeyword(''); setInputBatch(false); setInputQty(true); };
+
+  const openEditModal = (poNo: string) => setPoModal({ mode: 'edit', poNo });
+  const openCreateModal = () => setPoModal({ mode: 'create' });
+
+  const submitPoModal = (poNo: string, rows: ModalRow[]) => {
+    const validRows = rows.filter(r => Object.values(r).some(v => String(v ?? '').trim() !== ''));
+    if (validRows.length === 0) return;
+    setPoRows(prev => {
+      if (poModal?.mode === 'edit') {
+        const existing = prev.filter(r => r.poNo === poNo);
+        const rebuilt = validRows.map((r, i) => modalRowToPoRow(poNo, r, existing[i]));
+        return [...prev.filter(r => r.poNo !== poNo), ...rebuilt];
+      }
+      const created = validRows.map(r => modalRowToPoRow(poNo, r));
+      return [...prev, ...created];
+    });
+  };
+
+  const modalInitialRows =
+    poModal?.mode === 'edit' && poModal.poNo
+      ? poRows.filter(r => r.poNo === poModal.poNo).map(poRowToModalRow)
+      : undefined;
 
   const minTableWidth = COLUMNS.reduce((s, c) => s + c.width, 0);
 
@@ -637,7 +823,7 @@ export function PoManagementPage() {
       {/* ── Collapsible filter panel ─────────────────────── */}
       <div style={{
         background: 'var(--surface-bg)', overflow: 'hidden',
-        maxHeight: filterOpen ? '120px' : '0px', opacity: filterOpen ? 1 : 0,
+        maxHeight: filterOpen ? '170px' : '0px', opacity: filterOpen ? 1 : 0,
         transition: 'max-height 250ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease',
         borderBottom: filterOpen ? '1px solid var(--border-secondary)' : 'none',
         flexShrink: 0,
@@ -647,6 +833,31 @@ export function PoManagementPage() {
             <Select key={f.key} label={f.label} options={f.options}
               value={filterValues[f.key] ?? '전체'} onChange={v => handleFilterChange(f.key, v)} isDark={isDark} />
           ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 140 }}>
+            <label style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+              인보이스 발행 여부
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 33 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={inputBatch}
+                  onChange={e => setInputBatch(e.target.checked)}
+                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                />
+                O
+              </label>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={inputQty}
+                  onChange={e => setInputQty(e.target.checked)}
+                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                />
+                X
+              </label>
+            </div>
+          </div>
           <button onClick={resetAll} style={{
             display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', marginBottom: 1,
             background: 'transparent', border: '1px solid var(--border-primary)',
@@ -682,7 +893,7 @@ export function PoManagementPage() {
                 <tr style={{ background: 'var(--bg-faint)', borderBottom: '2px solid var(--border-primary)' }}>
                   {COLUMNS.map(col => (
                     <th key={col.key} style={{
-                      padding: '10px 10px', textAlign: col.align,
+                      padding: '8px 8px', textAlign: col.align,
                       fontSize: 11, fontWeight: 700,
                       letterSpacing: '0.04em',
                       color: ['poNo','process','product'].includes(col.key) ? 'var(--brand-primary)' : 'var(--text-tertiary)',
@@ -714,7 +925,19 @@ export function PoManagementPage() {
                       } else if (col.key === 'batchStatus') {
                         display = val ? (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                            <Search size={15} style={{ color: 'var(--brand-primary)', cursor: 'pointer' }} />
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setStatusPopupRow(row); }}
+                              title="배치 현황 보기"
+                              style={{
+                                background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                                borderRadius: 6, display: 'inline-flex', alignItems: 'center',
+                                color: 'var(--brand-primary)', transition: 'background 120ms',
+                              }}
+                              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,176,80,0.12)')}
+                              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                            >
+                              <ZoomIn size={15} strokeWidth={2} />
+                            </button>
                           </div>
                         ) : null;
                       } else if (col.key === 'memo') {
@@ -742,7 +965,7 @@ export function PoManagementPage() {
 
                       return (
                         <td key={col.key} style={{
-                          padding: '10px 10px', fontSize: 12.5,
+                          padding: '7px 8px', fontSize: 12,
                           fontWeight: ['poNo','process','product'].includes(col.key) ? 600 : 400,
                           color: val === '' || val === null || val === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
                           textAlign: col.key === 'invoiceFile' || col.key === 'batchStatus' ? 'center' : col.align,
@@ -750,7 +973,18 @@ export function PoManagementPage() {
                           borderRight: '1px solid var(--border-secondary)',
                           fontVariantNumeric: 'tabular-nums',
                         }}>
-                          {display}
+                          {col.key === 'poNo' ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openEditModal(String(val)); }}
+                              style={{
+                                background: 'none', border: 'none', padding: 0, margin: 0,
+                                color: 'var(--brand-primary)', cursor: 'pointer',
+                                font: 'inherit', fontWeight: 700, textDecoration: 'underline',
+                              }}
+                            >
+                              {display}
+                            </button>
+                          ) : display}
                         </td>
                       );
                     })}
@@ -762,7 +996,7 @@ export function PoManagementPage() {
                   <tr key={`empty-${i}`} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
                     {COLUMNS.map(col => (
                       <td key={col.key} style={{
-                        padding: '10px 10px', fontSize: 12.5,
+                        padding: '7px 8px', fontSize: 12,
                         borderRight: '1px solid var(--border-secondary)',
                       }}>&nbsp;</td>
                     ))}
@@ -810,7 +1044,7 @@ export function PoManagementPage() {
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <ActionBtn label="PO 등록" icon={<Plus size={13} />} primary onClick={() => setShowPoModal(true)} />
+          <ActionBtn label="PO 등록" icon={<Plus size={13} />} primary onClick={openCreateModal} />
           <div style={{ width: 1, height: 20, background: 'var(--border-primary)', margin: '0 2px' }} />
           <ActionBtn label="Download" icon={<Download size={13} />} />
           <ActionBtn label="Save"     icon={<Save size={13} />} primary />
@@ -827,7 +1061,18 @@ export function PoManagementPage() {
       />
 
       {/* PO Registration Modal */}
-      {showPoModal && <PoRegistrationModal onClose={() => setShowPoModal(false)} />}
+      {poModal && (
+        <PoRegistrationModal
+          onClose={() => setPoModal(null)}
+          mode={poModal.mode}
+          initialPoNo={poModal.poNo}
+          initialRows={modalInitialRows}
+          onSubmit={submitPoModal}
+        />
+      )}
+      {statusPopupRow && (
+        <BatchStatusPopup row={statusPopupRow} onClose={() => setStatusPopupRow(null)} isDark={isDark} />
+      )}
     </div>
   );
 }

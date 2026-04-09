@@ -11,7 +11,7 @@ const REPORT_TABS = [
   { label: 'FCST 대비 공급 레포트', path: '/report/supply' },
   { label: '충전/AI Status',          path: '/report/ai' },
   { label: '조립/포장 Status',        path: '/report/assembly' },
-  { label: 'DS Status',               path: '/report/ds' },
+  { label: '재고현황',                 path: '/report/ds' },
 ];
 
 /* ── Month columns ──────────────────────────────────────── */
@@ -115,10 +115,13 @@ const DATA: ReportRow[] = [
 
 /* ── Filter config ─────────────────────────────────────── */
 const FILTERS_CFG = [
-  { key: 'process',    label: 'Process', options: ['전체', '충전', '포장', '공급'] },
-  { key: 'product',    label: 'Product', options: ['전체', 'CT-P13 120mg', 'CT-P14 120mg', 'CT-P11 120mg'] },
-  { key: 'dosageForm', label: '제형',    options: ['전체', 'N/A', 'PFS', 'AI', 'PFS S'] },
-  { key: 'country',    label: '국가',    options: ['전체', 'N/A', 'CA', 'KR'] },
+  { key: 'opMonth',    label: '운영 월', options: ['2025.11'] },
+  { key: 'process',    label: 'Process', options: ['충전', '조립', '포장', 'L&P'] },
+  { key: 'product',    label: 'Product', options: ['CT-P13 120mg', 'CT-P17 20mg', 'CT-P06'] },
+  { key: 'dosageForm', label: '제형 구분', options: ['PFS', 'PFS-S', 'AI', 'Vial'] },
+  { key: 'country',    label: '국가 구분', options: ['CA', 'AU', 'TR', 'TW'] },
+  { key: 'pack',       label: 'Pack 구분', options: ['1', '2', '3', '6'] },
+  { key: 'step',       label: '공정 구분', options: ['라벨링', '조립/라벨/카토닝', '외부카토닝'] },
 ];
 
 /* ── 구분 style helpers ─────────────────────────────────── */
@@ -199,16 +202,19 @@ export function FcstSupplyReportPage() {
   const navigate   = useNavigate();
   const location   = useLocation();
 
+  const getDefaultFilterValue = (key: string) => FILTERS_CFG.find(f => f.key === key)?.options[0] ?? '';
+
   const toggle = (id: string) =>
     setExpanded(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
 
   const handleFilterChange = (key: string, val: string) => {
     setFilterValues(prev => ({ ...prev, [key]: val }));
-    if (val !== '전체' && !activeTags.includes(key)) setActiveTags(prev => [...prev, key]);
-    else if (val === '전체') setActiveTags(prev => prev.filter(t => t !== key));
+    const defaultVal = getDefaultFilterValue(key);
+    if (val !== defaultVal && !activeTags.includes(key)) setActiveTags(prev => [...prev, key]);
+    else if (val === defaultVal) setActiveTags(prev => prev.filter(t => t !== key));
   };
   const removeTag = (key: string) => {
-    setFilterValues(prev => ({ ...prev, [key]: '전체' }));
+    setFilterValues(prev => ({ ...prev, [key]: getDefaultFilterValue(key) }));
     setActiveTags(prev => prev.filter(t => t !== key));
   };
   const resetAll = () => { setFilterValues({}); setActiveTags([]); setKeyword(''); };
@@ -326,10 +332,10 @@ export function FcstSupplyReportPage() {
       </div>
 
       {/* ── Filter panel ────────────────────────────────── */}
-      <div style={{ background: 'var(--surface-bg)', overflow: 'hidden', maxHeight: filterOpen ? '110px' : '0px', opacity: filterOpen ? 1 : 0, transition: 'max-height 250ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease', borderBottom: filterOpen ? '1px solid var(--border-secondary)' : 'none', flexShrink: 0 }}>
+      <div style={{ background: 'var(--surface-bg)', overflow: 'hidden', maxHeight: filterOpen ? '170px' : '0px', opacity: filterOpen ? 1 : 0, transition: 'max-height 250ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease', borderBottom: filterOpen ? '1px solid var(--border-secondary)' : 'none', flexShrink: 0 }}>
         <div style={{ padding: '14px 24px 16px', display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
           {FILTERS_CFG.map(f => (
-            <Select key={f.key} label={f.label} options={f.options} value={filterValues[f.key] ?? '전체'} onChange={v => handleFilterChange(f.key, v)} isDark={isDark} />
+            <Select key={f.key} label={f.label} options={f.options} value={filterValues[f.key] ?? f.options[0]} onChange={v => handleFilterChange(f.key, v)} isDark={isDark} />
           ))}
           <button onClick={resetAll} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', marginBottom: 1, background: 'transparent', border: '1px solid var(--border-primary)', borderRadius: 9, fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', cursor: 'pointer', fontFamily: 'inherit', transition: 'color 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
@@ -366,7 +372,6 @@ export function FcstSupplyReportPage() {
               <tbody>
                 {DATA.flatMap(row => {
                   const isExpanded = expanded.has(row.id);
-                  const subBg   = isDark ? 'rgba(0,176,80,0.03)' : '#f7fbf8';
                   const subBdr  = isDark ? 'rgba(0,176,80,0.18)' : 'rgba(0,176,80,0.15)';
 
                   /* ── Parent row (항상 표시) ────────── */
@@ -422,7 +427,7 @@ export function FcstSupplyReportPage() {
 
                   if (!isExpanded) return [parentRow];
 
-                  /* ── Sub-rows (펼쳤을 때만 렌더) ──── */
+                  /* ── Sub-rows (펼쳤을 때만 렌더, 5행 세트 병합) ──── */
                   const subRows = GU_BUN.map((type, ti) => {
                     const isLast    = ti === N - 1;
                     const rowBg     = guBunBg(type, isDark);
@@ -438,29 +443,28 @@ export function FcstSupplyReportPage() {
                             : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                         }}
                       >
-                        {/* ── 왼쪽 cols: 빈칸 + 인덴트 라인 표시 ── */}
-                        <td style={{
-                          ...TD,
-                          background: subBg,
-                          borderRight: '1px solid var(--border-secondary)',
-                          position: 'relative',
-                          paddingLeft: 22,
-                        }}>
-                          {/* 세로 연결선 */}
-                          <span style={{
-                            position: 'absolute', left: 10, top: 0, bottom: isLast ? '50%' : 0,
-                            width: 1.5, background: subBdr, borderRadius: 2,
-                          }} />
-                          {/* 가로 연결선 */}
-                          <span style={{
-                            position: 'absolute', left: 10, top: '50%',
-                            width: 8, height: 1.5, background: subBdr,
-                          }} />
-                        </td>
-                        {/* product ~ 공정: 빈 칸 */}
-                        {(['product','batchSize','dosageForm','country','pack','공정'] as const).map(k => (
-                          <td key={k} style={{ ...TD, background: subBg, color: 'transparent' }}>—</td>
-                        ))}
+                        {ti === 0 && (
+                          <>
+                            <td rowSpan={N} style={{ ...MERGED_TD, textAlign: 'center', verticalAlign: 'middle', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  width: 16, height: 16, borderRadius: 4,
+                                  background: 'rgba(0,176,80,0.15)',
+                                }}>
+                                  <ChevronDown size={11} strokeWidth={2.5} />
+                                </span>
+                                {row.process}
+                              </span>
+                            </td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, fontWeight: 600, color: 'var(--text-primary)', verticalAlign: 'middle' }}>{row.product}</td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, textAlign: 'right', verticalAlign: 'middle' }}>{row.batchSize}</td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, textAlign: 'center', verticalAlign: 'middle' }}>{row.dosageForm}</td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, textAlign: 'center', verticalAlign: 'middle' }}>{row.country}</td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, textAlign: 'center', verticalAlign: 'middle' }}>{row.pack}</td>
+                            <td rowSpan={N} style={{ ...MERGED_TD, verticalAlign: 'middle' }}>{row.공정}</td>
+                          </>
+                        )}
 
                         {/* ── 구분 label ─── */}
                         <td style={{

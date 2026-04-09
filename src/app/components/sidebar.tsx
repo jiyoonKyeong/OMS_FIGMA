@@ -24,6 +24,8 @@ import {
   ScrollText,
 } from "lucide-react";
 import { useTheme } from "../contexts/theme-context";
+import celltrionLogo from "../../public/Logo_2_light.PNG";
+import celltrionLogoDark from "../../public/Logo_2_dark.png";
 
 interface NavItem {
   label: string;
@@ -99,7 +101,7 @@ const nav: NavGroup[] = [
         icon: <Truck size={18} />,
         sub: [
           {
-            label: "충전/AI 공급계획",
+            label: "충전/조립 공급계획",
             path: "/supply/ai",
             icon: <FlaskConical size={15} />,
           },
@@ -141,7 +143,7 @@ const nav: NavGroup[] = [
             icon: <Container size={15} />,
           },
           {
-            label: "DS Status",
+            label: "재고현황",
             path: "/report/ds",
             icon: <BarChart3 size={15} />,
           },
@@ -278,19 +280,19 @@ export function Sidebar() {
           padding: collapsed ? "20px 0" : "20px 14px 18px 20px",
         }}
       >
-        {!collapsed && (
+      {!collapsed && (
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 10,
             }}
           >
-            <div className="logo-mark" aria-hidden="true">
-              <span className="logo-dot" />
-              <span className="logo-dot logo-dot--fade" />
-            </div>
-            <span className="logo-text">CELLTRION Pharm</span>
+            <img
+              src={isDark ? celltrionLogoDark : celltrionLogo}
+              alt="CELLTRION Pharm"
+              style={{ height: 44, width: 'auto', objectFit: 'contain' }}
+            />
           </div>
         )}
         <button

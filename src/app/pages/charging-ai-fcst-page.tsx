@@ -112,22 +112,34 @@ function getCellBg(ci: number, row: FcstRow, isDark: boolean) {
   return 'transparent';
 }
 
-/* ── Tabs & Filters ──────────────────────────────────── */
-const TABS = ['충전/AI FCST', '조립/포장 FCST', 'L&P FCST'];
-const FILTERS = [
-  { key: 'process',   label: 'Process',    options: ['전체','충전','AI 요청','AI','A 소한','AI 소한'] },
-  { key: 'product',   label: 'Product',    options: ['전체','CT-P13 SC 25G','CT-P13 SC 2PS','CT-P17 25MG','CT-P17 40MG','CT-P38 100MG N','CT-P43 45MG N'] },
-  { key: 'batchSize', label: 'Batch Size', options: ['전체','100K','82K','62K','37K','30K','20K'] },
-];
+/* ── Tabs & Filters (UI 구성 — 목업 테이블 데이터는 변경 없음) ── */
+const FCST_MONTH_OPTIONS = MONTHS.map(m => {
+  const match = m.match(/^(\d+)년\s+(\d+)월$/);
+  if (!match) return m;
+  const yy = parseInt(match[1], 10);
+  const mm = parseInt(match[2], 10);
+  const yyyy = 2000 + yy;
+  return `${yyyy}.${String(mm).padStart(2, '0')}`;
+});
+const DEFAULT_FCST_MONTH = FCST_MONTH_OPTIONS[0] ?? '2025.11';
+
+const PROCESS_FILTER_OPTIONS = ['전체', '충전', '조립'];
+const PRODUCT_FILTER_OPTIONS = ['전체', 'CT-P39 150mg', '유플라이마 40mg', 'CT-P39 300MG AI'];
+
+const FILTER_LABELS: Record<string, string> = {
+  fcstMonth: 'FCST 월',
+  process: 'Process',
+  product: 'Product',
+};
 
 function fmt(v: number) { return v.toLocaleString('ko-KR'); }
 
-/* ── Select ──────────────────────────────────────────── */
-function Select({ label, options, value, onChange, isDark }: {
-  label: string; options: string[]; value: string; onChange: (v: string) => void; isDark: boolean;
+/* ── Select (라벨 상단 — 기존 필터 패널 가로 정렬) ──── */
+function Select({ label, options, value, onChange, isDark, minWidth = 110 }: {
+  label: string; options: string[]; value: string; onChange: (v: string) => void; isDark: boolean; minWidth?: number;
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 110 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth }}>
       <label style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
         {label}
       </label>
@@ -173,8 +185,10 @@ function ActionBtn({ label, icon, primary, onClick }: {
 /* ── Page ────────────────────────────────────────────── */
 export function ChargingAiFcstPage() {
   const [filterOpen,   setFilterOpen]   = useState(false);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({ fcstMonth: DEFAULT_FCST_MONTH });
   const [activeTags,   setActiveTags]   = useState<string[]>([]);
+  const [inputBatch,   setInputBatch]   = useState(false);
+  const [inputQty,     setInputQty]     = useState(true);
   const [keyword,      setKeyword]      = useState('');
   const [page,         setPage]         = useState(1);
   const [attachOpen,   setAttachOpen]   = useState(false);
@@ -189,11 +203,10 @@ export function ChargingAiFcstPage() {
       const kw = keyword.toLowerCase();
       if (!row.process.toLowerCase().includes(kw) && !row.product.toLowerCase().includes(kw)) return false;
     }
-    for (const tag of activeTags) {
-      const fv = filterValues[tag];
-      if (!fv || fv === '전체') continue;
-      if ((row as any)[tag] !== fv) return false;
-    }
+    const p = filterValues.process ?? '전체';
+    const pr = filterValues.product ?? '전체';
+    if (p !== '전체' && row.process !== p) return false;
+    if (pr !== '전체' && row.product !== pr) return false;
     return true;
   });
 
@@ -203,14 +216,30 @@ export function ChargingAiFcstPage() {
 
   const handleFilterChange = (key: string, val: string) => {
     setFilterValues(prev => ({ ...prev, [key]: val }));
-    if (val !== '전체' && !activeTags.includes(key)) setActiveTags(prev => [...prev, key]);
-    else if (val === '전체') setActiveTags(prev => prev.filter(t => t !== key));
+    setActiveTags(prev => {
+      if (key === 'fcstMonth') {
+        if (val !== DEFAULT_FCST_MONTH) return prev.includes('fcstMonth') ? prev : [...prev, 'fcstMonth'];
+        return prev.filter(t => t !== 'fcstMonth');
+      }
+      if (val !== '전체') return prev.includes(key) ? prev : [...prev, key];
+      return prev.filter(t => t !== key);
+    });
   };
   const removeTag = (key: string) => {
-    setFilterValues(prev => ({ ...prev, [key]: '전체' }));
+    if (key === 'fcstMonth') {
+      setFilterValues(prev => ({ ...prev, fcstMonth: DEFAULT_FCST_MONTH }));
+    } else {
+      setFilterValues(prev => ({ ...prev, [key]: '전체' }));
+    }
     setActiveTags(prev => prev.filter(t => t !== key));
   };
-  const resetAll = () => { setFilterValues({}); setActiveTags([]); setKeyword(''); };
+  const resetAll = () => {
+    setFilterValues({ fcstMonth: DEFAULT_FCST_MONTH });
+    setActiveTags([]);
+    setInputBatch(false);
+    setInputQty(true);
+    setKeyword('');
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -266,14 +295,14 @@ export function ChargingAiFcstPage() {
         </button>
 
         {activeTags.map(key => {
-          const f = FILTERS.find(fi => fi.key === key);
+          const lbl = FILTER_LABELS[key];
           return (
             <span key={key} style={{
               display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 8px 4px 10px',
               background: 'var(--nav-active-bg)', border: '1px solid rgba(0,176,80,0.25)',
               borderRadius: 20, fontSize: 11.5, fontWeight: 600, color: 'var(--brand-primary)',
             }}>
-              {f?.label}: {filterValues[key]}
+              {lbl}: {filterValues[key]}
               <button onClick={() => removeTag(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', padding: 0 }}>
                 <X size={10} />
               </button>
@@ -317,16 +346,61 @@ export function ChargingAiFcstPage() {
       {/* ── Collapsible filter panel ─────────────────────── */}
       <div style={{
         background: 'var(--surface-bg)', overflow: 'hidden',
-        maxHeight: filterOpen ? '120px' : '0px', opacity: filterOpen ? 1 : 0,
+        maxHeight: filterOpen ? '160px' : '0px', opacity: filterOpen ? 1 : 0,
         transition: 'max-height 250ms cubic-bezier(0.4,0,0.2,1), opacity 200ms ease',
         borderBottom: filterOpen ? '1px solid var(--border-secondary)' : 'none',
         flexShrink: 0,
       }}>
         <div style={{ padding: '14px 24px 16px', display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
-          {FILTERS.map(f => (
-            <Select key={f.key} label={f.label} options={f.options}
-              value={filterValues[f.key] ?? '전체'} onChange={v => handleFilterChange(f.key, v)} isDark={isDark} />
-          ))}
+          <Select
+            label="FCST 월"
+            options={FCST_MONTH_OPTIONS}
+            value={filterValues.fcstMonth ?? DEFAULT_FCST_MONTH}
+            onChange={v => handleFilterChange('fcstMonth', v)}
+            isDark={isDark}
+            minWidth={128}
+          />
+          <Select
+            label="Process"
+            options={PROCESS_FILTER_OPTIONS}
+            value={filterValues.process ?? '전체'}
+            onChange={v => handleFilterChange('process', v)}
+            isDark={isDark}
+            minWidth={118}
+          />
+          <Select
+            label="Product"
+            options={PRODUCT_FILTER_OPTIONS}
+            value={filterValues.product ?? '전체'}
+            onChange={v => handleFilterChange('product', v)}
+            isDark={isDark}
+            minWidth={168}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 120 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+              입력 구분
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 33 }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={inputBatch}
+                  onChange={e => setInputBatch(e.target.checked)}
+                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                />
+                배치
+              </label>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12.5, fontWeight: 500, color: 'var(--text-primary)' }}>
+                <input
+                  type="checkbox"
+                  checked={inputQty}
+                  onChange={e => setInputQty(e.target.checked)}
+                  style={{ width: 15, height: 15, accentColor: 'var(--brand-primary)', cursor: 'pointer' }}
+                />
+                수량
+              </label>
+            </div>
+          </div>
           <button onClick={resetAll} style={{
             display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', marginBottom: 1,
             background: 'transparent', border: '1px solid var(--border-primary)',
