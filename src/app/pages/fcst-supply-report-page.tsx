@@ -23,7 +23,7 @@ const MONTHS = [
 ];
 
 /* ── 구분 row types ─────────────────────────────────────── */
-const GU_BUN = ['FCST', '공급 계획', '최대', '소-중', '소-S'] as const;
+const GU_BUN = ['① FCST', '② 공급 계획', '③ PO 수량', '①-②', '①-③'] as const;
 type GuBun = (typeof GU_BUN)[number];
 type MonthMap = Partial<Record<string, number>>;
 
@@ -43,7 +43,7 @@ function mkSub(
   fcst: MonthMap, supply: MonthMap, max: MonthMap,
   mid: MonthMap, s: MonthMap,
 ): Record<GuBun, MonthMap> {
-  return { FCST: fcst, '공급 계획': supply, '최대': max, '소-중': mid, '소-S': s };
+  return { '① FCST': fcst, '② 공급 계획': supply, '③ PO 수량': max, '①-②': mid, '소-①-③': s };
 }
 
 /* ── Mock Data ─────────────────────────────────────────── */
@@ -126,16 +126,16 @@ const FILTERS_CFG = [
 
 /* ── 구분 style helpers ─────────────────────────────────── */
 function guBunBg(type: GuBun, isDark: boolean): string {
-  if (type === 'FCST')      return isDark ? 'rgba(96,165,250,0.06)'  : '#f0f7ff';
-  if (type === '공급 계획') return isDark ? 'rgba(0,176,80,0.07)'    : '#f0faf4';
-  if (type === '최대')      return isDark ? 'rgba(217,119,6,0.07)'   : '#fefce8';
-  if (type === '소-중')     return isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc';
+  if (type === '① FCST')      return isDark ? 'rgba(96,165,250,0.06)'  : '#f0f7ff';
+  if (type === '② 공급 계획') return isDark ? 'rgba(0,176,80,0.07)'    : '#f0faf4';
+  if (type === '③ PO 수량')      return isDark ? 'rgba(217,119,6,0.07)'   : '#fefce8';
+  if (type === '①-②')     return isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc';
   return isDark ? 'rgba(0,0,0,0.12)' : '#f1f5f9';
 }
 function guBunColor(type: GuBun): string {
-  if (type === '공급 계획') return '#00B050';
-  if (type === '최대')      return '#d97706';
-  if (type === '소-중' || type === '소-S') return 'var(--text-primary)';
+  if (type === '② 공급 계획') return '#00B050';
+  if (type === '③ PO 수량')      return '#d97706';
+  if (type === '①-②' || type === '①-③') return 'var(--text-primary)';
   return 'var(--text-secondary)';
 }
 
@@ -431,7 +431,7 @@ export function FcstSupplyReportPage() {
                   const subRows = GU_BUN.map((type, ti) => {
                     const isLast    = ti === N - 1;
                     const rowBg     = guBunBg(type, isDark);
-                    const isSummary = type === '소-중' || type === '소-S';
+                    const isSummary = type === '①-②' || type === '①-③';
 
                     return (
                       <tr
